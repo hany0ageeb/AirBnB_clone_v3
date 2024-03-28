@@ -95,6 +95,60 @@ class TestFileStorage(unittest.TestCase):
         FileStorage._FileStorage__objects = save
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_count(self):
+        """
+        test that count return the number of objects in storage
+        """
+        # setup
+        storage = FileStorage()
+        total_count = 0
+        for key, value in classes.items:
+            obj_count = storage.count(value)
+            self.assertEqual(
+                obj_count,
+                0,
+                f'count({key}) should return 0 instead it returns {obj_count}')
+            instance = value()
+            storage.new(instance)
+            total_count += 1
+            obj_count = storage.count(value)
+            self.assertEqual(
+                obj_count,
+                1,
+                f'count({key} should return 1 instead it returns {obj_count})')
+        self.assertEqual(
+            total_count,
+            storage.count(),
+            f'count() should return {total_count}')
+        self.assertEqual(storage.count('fake_class'), 0)
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
+    def test_get(self):
+        """test that get find the instance or return None if not found"""
+        # setup
+        save = FileStorage._FileStorage__objects
+        FileStorage._FileStorage__objects = {}
+        storage = FileStorage()
+        for key, value in classes.items():
+            with self.subTest(key=key, value=value):
+                instance = value()
+                storage.new(instance)
+                self.assertEqual(
+                    instance,
+                    storage.get(value, instance.id),
+                    'get did not return the correct object')
+        self.assertIsNone(
+            storage.get(None, 'pla'),
+            'if cls is None get should return None!')
+        self.assertIsNone(
+            storage.get(Amenity, None),
+            'if the id is None get should return None!')
+        self.assertIsNone(
+            storage.get(Amenity, 'fake_amenity_id'),
+            'if the id does not exist get should return None!')
+        FileStorage._FileStorage__objects = save
+
+    @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_save(self):
         """Test that save properly saves objects to file.json"""
         storage = FileStorage()
