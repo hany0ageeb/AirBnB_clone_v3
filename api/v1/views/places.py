@@ -122,12 +122,14 @@ def search_places():
     if json_data is None:
         abort(400, 'Not a JSON')
     states_ids = set(json_data.get('states', []))
-    cities_ids = set(json_data.get('cities', []))
+    cities_ids = json_data.get('cities', [])
     amenities_ids = set(json_data.get('amenities', []))
-    for state_id in states_ids:
-        state = storage.get(State, state_id)
-        if state and state.cities:
-            cities_ids.update([city.id for city in state.cities])
+    cities_ids = set(
+            [
+                city.id
+                for city in storage.all(City).values()
+                if city.id in cities_ids
+                or city.state_id in states_ids])
     if cities_ids:
         places = [
                 place
