@@ -118,37 +118,22 @@ def search_places():
     POST /api/v1/places_search that retrieves all Place objects depending
     of the JSON in the body of the request.
     """
-    def filter_place(place, amenities_ids):
-        if amenities_ids:
-            for amenity_id in place.amenity_ids:
-                if amenity_id not in amenities_ids:
-                    return False
-        return True
-
-    try:
-        json_data = request.get_json()
-        states_ids = set(json_data.get('states', []))
-        cities_ids = set(json_data.get('cities', []))
-        amenities_ids = set(json_data.get('amenities', []))
-        if not states_ids and not cities_ids and not amenities_ids:
-            places = set(
-                    [place.to_dict()
-                        for place in storage.all(Place).values()])
-        else:
-            for state_id in states_ids:
-                state = storage.get(State, state_id)
-                if state and state.cities:
-                    cities_ids.update([city.id for city in state.cities])
-            cities = set(
-                    [storage.get(City, city_id)
-                        for city_id in cities_ids])
-            cities.discard(None)
-            places = set()
-            for city in cities:
-                places.update(city.places)
-            found_places = [
-                    place for place in places
-                    if filter_place(place, amenities_ids)]
-            return jsonify([place.to_dict() for place in found_places]), 200
-    except BadRequest:
-        return jsonify({'error': 'Not a JSON'}), 400
+    json_data = request.get_json(silent=True)
+    if json_data is None:
+        abort(400, 'Not a JSON')
+    states_ids = set(json_data.get('states', []))
+    cities_ids = set(json_data.get('cities', []))
+    amenities_ids = set(json_data.get('amenities', []))
+    if not states_ids and not cities_ids:
+        places = storage.all(Place).values()
+    else:
+        for state_id in states_ids:
+            state = storage.get(State, state_id)
+            if state and state.cities:
+                cities_ids.update([city.id for city in state.cities])
+        places = [
+                place
+                for place in storage.all(Place).values()
+                if place.city_id in cities_ids
+                and amenities_ids.issubset(place.amenity_ids)]
+    return jsonify([place.to_dict() for place in places]), 200
