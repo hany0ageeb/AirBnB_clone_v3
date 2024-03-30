@@ -68,10 +68,8 @@ class BaseModel:
         new_dict["__class__"] = self.__class__.__name__
         if "_sa_instance_state" in new_dict:
             del new_dict["_sa_instance_state"]
-        if "_User__password" in new_dict:
+        if "_User__password" in new_dict and not add_password:
             del new_dict["_User__password"]
-        if not add_password and "password" in new_dict:
-            del new_dict["password"]
         return new_dict
 
     def delete(self):
