@@ -56,6 +56,7 @@ def create_state():
         json_data = request.get_json()
         if 'name' not in json_data.keys():
             return jsonify({'error': 'Missing name'}), 400
+        json_data = {key: value for key, value in json_data.items() if key == 'name'}
         state = State(**json_data)
         storage.new(state)
         storage.save()
