@@ -28,7 +28,8 @@ def show_states(state_id=None):
             abort(404)
     else:
         states = storage.all(State).values()
-        return jsonify([state.to_dict() for state in states]), 200
+        result = [state.to_dict() for state in states]
+        return jsonify(result), 200
 
 
 @app_views.route(
@@ -54,8 +55,8 @@ def delete_state(state_id):
         strict_slashes=False)
 def create_state():
     """Creates a State: POST /api/v1/states"""
-    json_data = request.get_json()
-    if not json_data:
+    json_data = request.get_json(silent=True)
+    if json_data is None:
         abort(400, 'Not a JSON')
     if 'name' not in json_data.keys():
         abort(400, 'Missing name')
@@ -77,8 +78,8 @@ def update_state(state_id):
     if state is None:
         abort(404)
     else:
-        json_data = request.get_json()
-        if not json_data:
+        json_data = request.get_json(silent=True)
+        if json_data is None:
             abort(400, 'Not a JSON')
         for key, value in json_data.items():
             if key not in __banned_attributes:
