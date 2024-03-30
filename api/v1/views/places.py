@@ -8,6 +8,7 @@ from models import storage
 from models.place import Place
 from models.city import City
 from models.state import State
+from models.user import User
 
 
 @app_views.route(
@@ -64,22 +65,23 @@ def create_place(city_id):
     Creates a Place: POST /api/v1/cities/<city_id>/places
     """
     city = storage.get(City, city_id)
-    if city is not None:
-        json_data = request.get_json(silent=True)
-        if json_data is None:
-            abort(400, 'Not a JSON')
-        if 'user_id' not in json_data:
-            abort(400, 'Missing user_id')
-        user = storage.get(User, json_data['user_id'])
-        if user is not None:
-            if 'name' not in json_data:
-                abort(400, 'Missing name')
-            place = Place(**json_data)
-            storage.new(place)
-            storage.save()
-            return jsonify(place), 201
+    if city is None:
         abort(404)
-    abort(404)
+    json_data = request.get_json(silent=True)
+    if json_data is None:
+        abort(400, 'Not a JSON')
+    if 'user_id' not in json_data.keys():
+        abort(400, 'Missing user_id')
+    user = storage.get(User, json_data['user_id'])
+    if user is None:
+        abort(404)
+    if 'name' not in json_data.keys():
+        abort(400, 'Missing name')
+    json_data['city_id'] = city_id
+    place = Place(**json_data)
+    storage.new(place)
+    storage.save()
+    return jsonify(place.to_dict()), 201
 
 
 @app_views.route(
@@ -97,16 +99,16 @@ def update_palce(place_id):
             'city_id',
             'created_at',
             'updated_at')
-    if place is not None:
-        json_data = request.get_json(silent=True)
-        if json_data is None:
-            abort(400, 'Not a JSON')
-        for key, value in json_data.items():
-            if key not in banned_attributes:
-                setattr(place, key, value)
-        storage.save()
-        return jsonify(place.to_dict()), 200
-    abort(404)
+    if place is None:
+        abort(404)
+    json_data = request.get_json(silent=True)
+    if json_data is None:
+        abort(400, 'Not a JSON')
+    for key, value in json_data.items():
+        if key not in banned_attributes:
+            setattr(place, key, value)
+    storage.save()
+    return jsonify(place.to_dict()), 200
 
 
 @app_views.route('/places_search', methods=['POST'], strict_slashes=False)
