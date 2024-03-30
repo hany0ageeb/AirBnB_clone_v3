@@ -22,7 +22,8 @@ def show_city_places(city_id):
     """
     city = storage.get(City, city_id)
     if city is not None:
-        return jsonify([place.to_dict() for place in city.places]), 200
+        city_places = [place.to_dict() for place in city.places]
+        return jsonify(city_places), 200
     abort(404)
 
 
@@ -35,9 +36,9 @@ def show_places(place_id):
     Retrieves a Place object. : GET /api/v1/places/<place_id>
     """
     place = storage.get(Place, place_id)
-    if place is not None:
-        return jsonify(place.to_dict()), 200
-    abort(404)
+    if place is None:
+        abort(404)
+    return jsonify(place.to_dict()), 200
 
 
 @app_views.route(
@@ -49,11 +50,11 @@ def delete_place(palce_id):
     Deletes a Place object: DELETE /api/v1/places/<place_id>
     """
     place = storage.get(Place, place_id)
-    if place is not None:
-        storage.delete(place)
-        storage.save()
-        return jsonify({}), 200
-    abort(404)
+    if place is None:
+        abort(404)
+    storage.delete(place)
+    storage.save()
+    return jsonify({}), 200
 
 
 @app_views.route(
