@@ -37,6 +37,27 @@ class Place(BaseModel, Base):
         amenities = relationship("Amenity", secondary="place_amenity",
                                  backref="place_amenities",
                                  viewonly=False)
+
+        @property
+        def amenity_ids(self):
+            """amenity_ids property getter"""
+            return [amenity.id for amenity in self.amenities]
+
+        def remove_amenity(self, amenity):
+            """remove amenity"""
+            first_or_default = next((a for a in self.amenities if a.id == amenity.id), None)
+            if first_or_default:
+                self.amenities.remove(first_or_default)
+                return True
+            return False
+
+        def add_amenity(self, amenity):
+            """add amenity to place"""
+            if amenity not in self.amenities:
+                self.amenities.append(amenity)
+                return True
+            return False
+
     else:
         city_id = ""
         user_id = ""
@@ -50,29 +71,40 @@ class Place(BaseModel, Base):
         longitude = 0.0
         amenity_ids = []
 
-    def __init__(self, *args, **kwargs):
-        """initializes Place"""
-        super().__init__(*args, **kwargs)
-
-    if models.storage_t != 'db':
         @property
         def reviews(self):
-            """getter attribute returns the list of Review instances"""
+            """reviews property getter"""
             from models.review import Review
-            review_list = []
-            all_reviews = models.storage.all(Review)
-            for review in all_reviews.values():
-                if review.place_id == self.id:
-                    review_list.append(review)
-            return review_list
+            all_reviews = models.storage.all(Review).values()
+            return [
+                    review for review in all_reviews
+                    if review.place_id == self.id]
 
         @property
         def amenities(self):
-            """getter attribute returns the list of Amenity instances"""
+            """amenities property getter"""
             from models.amenity import Amenity
-            amenity_list = []
-            all_amenities = models.storage.all(Amenity)
-            for amenity in all_amenities.values():
-                if amenity.place_id == self.id:
-                    amenity_list.append(amenity)
-            return amenity_list
+            amenities = set(
+                    [
+                        models.storage.get(Amenity, amenity_id)
+                        for amenity_id in amenity_ids])
+            amenities.reduce(None)
+            return list(amenities)
+
+        def remove_amenity(self, amenity):
+            """remove amenity id"""
+            try:
+                self.amenity_ids.remove(amenity.id)
+                return True
+            except ValueError:
+                return False
+
+        def add_amenity(self, amenity):
+            if amenity.id not in self.amenity_ids:
+                self.amenity_ids.append(amenity_id)
+                return True
+            return False
+
+    def __init__(self, *args, **kwargs):
+        """initializes Place"""
+        super().__init__(*args, **kwargs)

@@ -100,9 +100,11 @@ class TestFileStorage(unittest.TestCase):
         test that count return the number of objects in storage
         """
         # setup
+        save = FileStorage._FileStorage__objects
         storage = FileStorage()
+        FileStorage._FileStorage__objects = {}
         total_count = 0
-        for key, value in classes.items:
+        for key, value in classes.items():
             obj_count = storage.count(value)
             self.assertEqual(
                 obj_count,
@@ -121,6 +123,7 @@ class TestFileStorage(unittest.TestCase):
             storage.count(),
             f'count() should return {total_count}')
         self.assertEqual(storage.count('fake_class'), 0)
+        FileStorage._FileStorage__objects = save
 
     @unittest.skipIf(models.storage_t == 'db', "not testing file storage")
     def test_get(self):
