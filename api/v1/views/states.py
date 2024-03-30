@@ -72,6 +72,7 @@ def update_state(state_id):
     """
     Updates a State object: PUT /api/v1/states/<state_id>
     """
+    banned_attributes = ('id', 'created_at', 'updated_at')
     try:
         state = storage.get(State, state_id)
         if state is None:
@@ -79,7 +80,7 @@ def update_state(state_id):
         else:
             json_data = request.get_json()
             for key, value in json_data.items():
-                if key not in ('id', 'created_at', 'update_at'):
+                if key not in banned_attributes:
                     setattr(state, key, value)
             storage.save()
             return jsonify(state.to_dict()), 200
