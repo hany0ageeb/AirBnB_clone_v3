@@ -4,7 +4,6 @@ module - amenities
 """
 from api.v1.views import app_views
 from flask import jsonify, request, abort
-from werkzeug.exceptions import BadRequest
 from models import storage
 from models.amenity import Amenity
 
@@ -42,7 +41,7 @@ def delete_amenity(amenity_id):
     if amenity is not None:
         storage.delete(amenity)
         storage.save()
-        return jsonify(amenity.to_dict()), 200
+        return jsonify({}), 200
     abort(404)
 
 
@@ -51,35 +50,33 @@ def create_amenity():
     """
     Creates a Amenity: POST /api/v1/amenities
     """
-    try:
-        json_data = request.get_json()
-        if 'name' not in json_data:
-            return jsonify({'error': 'Missing name'}), 400
-        amenity = Amenity(**json_data)
-        storage.new(amenity)
-        storage.save()
-        return jsonify(amenity.to_dict()), 201
-    except BadRequest:
-        return jsonify({'error': 'Not a JSON'}), 400
+    json_data = request.get_json(silent=True)
+    if json_data is None:
+        abort(400, 'Not a JSON')
+    if 'name' not in json_data:
+        abort(400, 'Missing name')
+    amenity = Amenity(**json_data)
+    storage.new(amenity)
+    storage.save()
+    return jsonify(amenity.to_dict()), 201
 
 
 @app_views.route(
         '/amenities/<string:amenity_id>',
         methods=['PUT'],
         strict_slashes=False)
-def update_amenity():
+def update_amenity(amenity_id):
     """
     Updates a Amenity object: PUT /api/v1/amenities/<amenity_id>
     """
     amenity = storage.get(Amenity, amenity_id)
     if amenity is not None:
-        try:
-            json_data = request.get_json()
-            for key, value in json_data.items():
-                if key not in ('id', 'created_at', 'updated_at'):
-                    setattr(amenity, key, value)
+        json_data = request.get_json(silent=True)
+        if json_data is None:
+            abort(400, 'Not a JSON')
+        for key, value in json_data.items():
+            if key not in ('id', 'created_at', 'updated_at'):
+                setattr(amenity, key, value)
             storage.save()
             return jsonify(amenity.to_dict()), 200
-        except BadRequest:
-            return jsonify({'error': 'Not a JSON'}), 400
     abort(404)
