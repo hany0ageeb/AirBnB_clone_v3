@@ -126,11 +126,13 @@ def search_places():
     amenities_ids = set(json_data.get('amenities', []))
     if states_ids:
         cities_ids = set(
-            [
-                city.id
-                for city in storage.all(City).values()
-                if city.id in cities_ids
-                or city.state_id in states_ids])
+                map(
+                    lambda city: city.id,
+                    filter(
+                        lambda city:
+                        city.state_id in states_ids
+                        or city_id in cities_ids,
+                        storage.all(City).values)))
     if cities_ids:
         places = [
                 place
