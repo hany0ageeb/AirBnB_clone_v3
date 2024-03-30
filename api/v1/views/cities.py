@@ -91,13 +91,15 @@ def update_city(city_id):
     """
     Updates a City object: PUT /api/v1/cities/<city_id>
     """
+    banned_attributes = ('id', 'created_at', 'updated_at', 'state_id')
     try:
         city = storage.get(City, city_id)
         if city is None:
             abort(404)
         else:
+            json_data = request.get_json()
             for key, value in json_data.items():
-                if key not in ('id', 'update_at', 'created_at'):
+                if key not in banned_attributes:
                     setattr(city, key, value)
             storage.save()
             return jsonify(city.to_dict()), 200
