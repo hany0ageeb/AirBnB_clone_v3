@@ -124,7 +124,8 @@ def search_places():
     states_ids = set(json_data.get('states', []))
     cities_ids = json_data.get('cities', [])
     amenities_ids = set(json_data.get('amenities', []))
-    cities_ids = set(
+    if states_ids:
+        cities_ids = set(
             [
                 city.id
                 for city in storage.all(City).values()
