@@ -4,7 +4,6 @@ module - places
 """
 from api.v1.views import app_views
 from flask import jsonify, request, abort
-from werkzeug.exceptions import BadRequest
 from models import storage
 from models.place import Place
 from models.city import City
@@ -52,7 +51,7 @@ def delete_place(palce_id):
     if place is not None:
         storage.delete(place)
         storage.save()
-        return jsonify(place.to_dict()), 200
+        return jsonify({}), 200
     abort(404)
 
 
@@ -66,21 +65,20 @@ def create_place(city_id):
     """
     city = storage.get(City, city_id)
     if city is not None:
-        try:
-            json_data = request.get_json()
-            if 'user_id' not in json_data:
-                return jsonify({'error': 'Missing user_id'}), 400
-            user = storage.get(User, json_data['user_id'])
-            if user is not None:
-                if 'name' not in json_data:
-                    return jsonify({'error': 'Missing name'}), 400
-                place = Place(**json_data)
-                storage.new(place)
-                storage.save()
-                return jsonify(place), 201
-            abort(404)
-        except BadRequest:
-            return jsonify({'error': 'Not a JSON'}), 400
+        json_data = request.get_json(silent=True)
+        if json_data is None:
+            abort(400, 'Not a JSON')
+        if 'user_id' not in json_data:
+            abort(400, 'Missing user_id')
+        user = storage.get(User, json_data['user_id'])
+        if user is not None:
+            if 'name' not in json_data:
+                abort(400, 'Missing name')
+            place = Place(**json_data)
+            storage.new(place)
+            storage.save()
+            return jsonify(place), 201
+        abort(404)
     abort(404)
 
 
@@ -100,15 +98,14 @@ def update_palce(place_id):
             'created_at',
             'updated_at')
     if place is not None:
-        try:
-            json_data = request.get_json()
-            for key, value in json_data.items():
-                if key not in banned_attributes:
-                    setattr(place, key, value)
-            storage.save()
-            return jsonify(place.to_dict()), 200
-        except Badrequest:
-            return jsonify({'error': 'Not a JSON'}), 400
+        json_data = request.get_json(silent=True)
+        if json_data is None:
+            abort(400, 'Not a JSON')
+        for key, value in json_data.items():
+            if key not in banned_attributes:
+                setattr(place, key, value)
+        storage.save()
+        return jsonify(place.to_dict()), 200
     abort(404)
 
 
