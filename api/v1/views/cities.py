@@ -4,7 +4,6 @@ module - cities
 """
 from api.v1.views import app_views
 from flask import jsonify, request, abort
-from werkzeug.exceptions import BadRequest
 from models import storage
 from models.state import State
 from models.city import City
@@ -23,7 +22,8 @@ def show_state_cities(state_id):
     if state is None:
         abort(404)
     else:
-        return jsonify([city.to_dict() for city in state.cities]), 200
+        result = [city.to_dict() for city in state.cities]
+        return jsonify(result), 200
 
 
 @app_views.route(
@@ -68,17 +68,16 @@ def create_city(state_id):
     """
     state = storage.get(State, state_id)
     if state is not None:
-        try:
-            json_data = request.get_json()
-            if 'name' not in json_data:
-                return jsonify({'error': 'Missing name'}), 400
-            json_data['state_id'] = state_id
-            city = City(**json_data)
-            storage.new(city)
-            storage.save()
-            return jsonify(city.to_dict()), 201
-        except BadRequest:
-            return jsonify({'error': 'Not a JSON'}), 400
+        json_data = request.get_json(silent=True)
+        if json_data is None:
+            abort(400, 'Not a JSON')
+        if 'name' not in json_data.keys():
+            abort(400, 'Missing name')
+        json_data['state_id'] = state.id
+        city = City(**json_data)
+        storage.new(city)
+        storage.save()
+        return jsonify(city.to_dict()), 201
     else:
         abort(404)
 
@@ -92,16 +91,18 @@ def update_city(city_id):
     Updates a City object: PUT /api/v1/cities/<city_id>
     """
     banned_attributes = ('id', 'created_at', 'updated_at', 'state_id')
-    try:
-        city = storage.get(City, city_id)
-        if city is None:
-            abort(404)
-        else:
-            json_data = request.get_json()
-            for key, value in json_data.items():
-                if key not in banned_attributes:
-                    setattr(city, key, value)
-            storage.save()
-            return jsonify(city.to_dict()), 200
-    except BadRequest:
-        return jsonify({'error': 'Not a JSON'}), 400
+    city = storage.get(City, city_id)
+    if city is None:
+        abort(404)
+    else:
+        json_data = request.get_json(silent=True)
+        if json_data is None:
+            abort(400, 'Not a JSON')
+        json_data = {
+                key: value
+                for key, value in json_data.items()
+                if key not in banned_attributes}
+        for key, value in json_data.items():
+            setattr(city, key, value)
+        storage.save()
+        return jsonify(city.to_dict()), 200
