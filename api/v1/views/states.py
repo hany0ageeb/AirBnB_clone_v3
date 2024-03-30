@@ -25,9 +25,8 @@ def show_states(state_id=None):
         else:
             abort(404)
     else:
-        states = storage.all(State)
-        states = list(map(lambda state: state.to_dict(), states.values()))
-        return jsonify(states), 200
+        states = storage.all(State).values()
+        return jsonify([state.to_dict() for state in states]), 200
 
 
 @app_views.route(
@@ -56,7 +55,7 @@ def create_state():
     try:
         json_data = request.get_json()
         if 'name' not in json_data.keys():
-            return jsonify({'error': 'Missing name'}, status=400)
+            return jsonify({'error': 'Missing name'}), 400
         state = State(**json_data)
         storage.new(state)
         storage.save()
