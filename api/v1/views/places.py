@@ -130,8 +130,8 @@ def search_places():
                     filter(
                         lambda city:
                         city.state_id in states_ids
-                        or city.city_id in cities_ids,
-                        storage.all(City).values)))
+                        or city.id in cities_ids,
+                        storage.all(City).values())))
     if cities_ids:
         places = [
                 place
@@ -143,4 +143,10 @@ def search_places():
                 place
                 for place in storage.all(Place).values()
                 if amenities_ids.issubset(set(place.amenity_ids))]
-    return jsonify([place.to_dict() for place in places]), 200
+    result = [
+            {
+                key: value
+                for key, value in place.to_dict().items()
+                if key != 'amenity_ids'}
+            for place in places]
+    return jsonify(result), 200
