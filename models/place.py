@@ -2,8 +2,6 @@
 """ holds class Place"""
 import models
 from models.base_model import BaseModel, Base
-from os import getenv
-import sqlalchemy
 from sqlalchemy import Column, String, Integer, Float, ForeignKey, Table
 from sqlalchemy.orm import relationship
 
@@ -96,7 +94,7 @@ class Place(BaseModel, Base):
             amenities = set(
                     [
                         models.storage.get(Amenity, amenity_id)
-                        for amenity_id in amenity_ids])
+                        for amenity_id in self.amenity_ids])
             amenities.reduce(None)
             return list(amenities)
 
@@ -110,7 +108,7 @@ class Place(BaseModel, Base):
 
         def add_amenity(self, amenity):
             if amenity.id not in self.amenity_ids:
-                self.amenity_ids.append(amenity_id)
+                self.amenity_ids.append(amenity.id)
                 return True
             return False
 
@@ -118,9 +116,9 @@ class Place(BaseModel, Base):
         """initializes Place"""
         super().__init__(*args, **kwargs)
 
-    def to_dict(self):
+    def to_dict(self, add_password=False):
         """Override the BaseModel to_dict"""
-        dictionary = super().to_dict()
+        dictionary = super().to_dict(add_password)
         if 'amenities' in dictionary:
             del dictionary['amenities']
         if 'reviews' in dictionary:

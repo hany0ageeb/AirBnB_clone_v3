@@ -2,8 +2,6 @@
 """ holds class Amenity"""
 import models
 from models.base_model import BaseModel, Base
-from os import getenv
-import sqlalchemy
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
 
@@ -24,3 +22,10 @@ class Amenity(BaseModel, Base):
     def __init__(self, *args, **kwargs):
         """initializes Amenity"""
         super().__init__(*args, **kwargs)
+    
+    def to_dict(self, add_password=False):
+        """override to_dict"""
+        return {
+            key: value
+            for key, value in super().to_dict(add_password).items()
+            if key != 'place_amenities'}

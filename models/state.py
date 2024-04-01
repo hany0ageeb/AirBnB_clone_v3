@@ -18,11 +18,6 @@ class State(BaseModel, Base):
     else:
         name = ""
 
-    def __init__(self, *args, **kwargs):
-        """initializes state"""
-        super().__init__(*args, **kwargs)
-
-    if models.storage_t != "db":
         @property
         def cities(self):
             """getter for list of city instances related to the state"""
@@ -32,3 +27,13 @@ class State(BaseModel, Base):
                 if city.state_id == self.id:
                     city_list.append(city)
             return city_list
+
+    def __init__(self, *args, **kwargs):
+        """initializes state"""
+        super().__init__(*args, **kwargs)
+    
+    def to_dict(self, add_password=False):
+        return {
+            key: value
+            for key, value in super().to_dict(add_password).items()
+            if key != 'cities'}

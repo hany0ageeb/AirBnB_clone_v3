@@ -50,3 +50,10 @@ class User(BaseModel, Base):
             kwargs.pop('password')
         super().__init__(*args, **kwargs)
         self.password = pwd
+
+    def to_dict(self, add_password=False):
+        """overriding to_dict method"""
+        return {
+            key: value
+            for key, value in super().to_dict(add_password).items()
+            if key not in ('places', 'reviews')}
