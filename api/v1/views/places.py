@@ -124,7 +124,7 @@ def search_places():
     if json_data is None:
         abort(400, 'Not a JSON')
     states_ids = set(json_data.get('states', []))
-    cities_ids = json_data.get('cities', [])
+    cities_ids = set(json_data.get('cities', []))
     amenities_ids = set(json_data.get('amenities', []))
     if states_ids:
         cities_ids = set(
@@ -144,4 +144,4 @@ def search_places():
                 place
                 for place in storage.all(Place).values()
                 if amenities_ids.issubset(set(place.amenity_ids))]
-    return jsonify([place.to_dict() for place in places()]), 200
+    return jsonify([place.to_dict() for place in places]), 200
