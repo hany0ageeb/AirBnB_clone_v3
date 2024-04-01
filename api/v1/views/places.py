@@ -7,7 +7,6 @@ from flask import jsonify, request, abort
 from models import storage
 from models.place import Place
 from models.city import City
-from models.state import State
 from models.user import User
 
 
@@ -49,7 +48,7 @@ def delete_place(palce_id):
     """
     Deletes a Place object: DELETE /api/v1/places/<place_id>
     """
-    place = storage.get(Place, place_id)
+    place = storage.get(Place, palce_id)
     if place is None:
         abort(404)
     storage.delete(place)
@@ -131,7 +130,7 @@ def search_places():
                     filter(
                         lambda city:
                         city.state_id in states_ids
-                        or city_id in cities_ids,
+                        or city.city_id in cities_ids,
                         storage.all(City).values)))
     if cities_ids:
         places = [
