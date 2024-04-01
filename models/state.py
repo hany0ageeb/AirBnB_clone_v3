@@ -31,8 +31,9 @@ class State(BaseModel, Base):
     def __init__(self, *args, **kwargs):
         """initializes state"""
         super().__init__(*args, **kwargs)
-    
+
     def to_dict(self, add_password=False):
+        """overriding to_dict"""
         return {
             key: value
             for key, value in super().to_dict(add_password).items()
