@@ -70,12 +70,12 @@ def create_place(city_id):
     json_data = request.get_json(silent=True)
     if json_data is None:
         abort(400, 'Not a JSON')
-    if 'user_id' not in json_data.keys():
+    if 'user_id' not in json_data:
         abort(400, 'Missing user_id')
     user = storage.get(User, json_data['user_id'])
     if user is None:
         abort(404)
-    if 'name' not in json_data.keys():
+    if 'name' not in json_data:
         abort(400, 'Missing name')
     json_data['city_id'] = city_id
     place = Place(**json_data)
@@ -111,7 +111,10 @@ def update_palce(place_id):
     return jsonify(place.to_dict()), 200
 
 
-@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
+@app_views.route(
+        '/places_search',
+        methods=['POST'],
+        strict_slashes=False)
 def search_places():
     """
     POST /api/v1/places_search that retrieves all Place objects depending
@@ -125,13 +128,11 @@ def search_places():
     amenities_ids = set(json_data.get('amenities', []))
     if states_ids:
         cities_ids = set(
-                map(
-                    lambda city: city.id,
-                    filter(
-                        lambda city:
-                        city.state_id in states_ids
-                        or city.id in cities_ids,
-                        storage.all(City).values())))
+                [
+                    city.id
+                    for city in storage.all(City).values()
+                    if city.state_id in states_ids
+                    or city.id in cities_ids])
     if cities_ids:
         places = [
                 place
@@ -143,10 +144,4 @@ def search_places():
                 place
                 for place in storage.all(Place).values()
                 if amenities_ids.issubset(set(place.amenity_ids))]
-    result = [
-            {
-                key: value
-                for key, value in place.to_dict().items()
-                if key != 'amenity_ids'}
-            for place in places]
-    return jsonify(result), 200
+    return jsonify([place.to_dict() for place in places()]), 200
