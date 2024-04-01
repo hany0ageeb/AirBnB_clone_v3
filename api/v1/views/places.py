@@ -11,7 +11,7 @@ from models.user import User
 
 
 @app_views.route(
-        '/cities/<city_id>/places',
+        '/cities/<string:city_id>/places',
         methods=['GET'],
         strict_slashes=False)
 def show_city_places(city_id):
@@ -20,7 +20,7 @@ def show_city_places(city_id):
     GET /api/v1/cities/<city_id>/places
     """
     city = storage.get(City, city_id)
-    if city is not None:
+    if city:
         city_places = [place.to_dict() for place in city.places]
         return jsonify(city_places), 200
     abort(404)
@@ -44,11 +44,11 @@ def show_places(place_id):
         '/places/<string:place_id>',
         methods=['DELETE'],
         strict_slashes=False)
-def delete_place(palce_id):
+def delete_place(place_id):
     """
     Deletes a Place object: DELETE /api/v1/places/<place_id>
     """
-    place = storage.get(Place, palce_id)
+    place = storage.get(Place, place_id)
     if place is None:
         abort(404)
     storage.delete(place)
