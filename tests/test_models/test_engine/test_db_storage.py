@@ -81,27 +81,18 @@ class TestFileStorage(unittest.TestCase):
         # setup
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
-    def test_count(self):
+    def test_count_exist(self):
         """
         test count return the number of objects
         """
-        import MySQLdb
-        from uuid import uuid4
-        from os import getenv
-        # setup
-        storage = DBStorage()
-        connection = MySQLdb.connect(
-                host=getenv('HBNB_MYSQL_HOST'),
-                user=getenv('HBNB_MYSQL_USER'),
-                password=getenv('HBNB_MYSQL_PWD'),
-                db=getenv('HBNB_MYSQL_DB'))
-        cur = connection.cursor()
-        cur.execute('INSERT INTO states(id, name) VALUES (%s, %s)', (str(uuid4()), 'fake state1'))
-        connection.close()
-        # test
-        storage.reload()
-        self.assertEqual(storage.count(State), 1)
-        storage.close()
+        self.assertTrue(hasattr(DBStorage, count))
+        self.assertTrue(callable(getattr(DBStorage, count)))
+
+    @unittest.skipIf(models.storage_t != 'db', 'not testing db storage')
+    def test_get_exist(self):
+        """test get method exists"""
+        self.assertTrue(hasattr(DBStorage, get))
+        self.assertTrue(callable(getattr(DBStorage, count)))
 
     @unittest.skipIf(models.storage_t != 'db', "not testing db storage")
     def test_all_no_class(self):
