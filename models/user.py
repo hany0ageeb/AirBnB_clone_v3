@@ -41,7 +41,7 @@ class User(BaseModel, Base):
 
         @password.setter
         def password(self, pwd):
-            self.__password = hashlib.md5(pwd.encode()).hexadigets()
+            self.__password = hashlib.md5(pwd.encode()).hexdigest()
 
     def __init__(self, *args, **kwargs):
         """initializes user"""

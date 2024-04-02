@@ -53,8 +53,8 @@ class FileStorage:
         try:
             with open(self.__file_path, 'r') as f:
                 jo = json.load(f)
-            for key in jo:
-                self.__objects[key] = classes[jo[key]["__class__"]](**jo[key])
+            for key, value in jo.items():
+                self.__objects[key] = classes[value['__class__']](**value)
         except Exception:
             pass
 
@@ -75,11 +75,12 @@ class FileStorage:
         If no class is passed, returns the count of all objects in storage.
         """
         if cls:
-            return len(
-                    filter(
-                        lambda obj: type(obj) is cls
-                        or obj.__class__.__name__ == cls,
-                        FileStorage.__objects.values()))
+            objs = [
+                    obj
+                    for obj in FileStorage.__objects.values()
+                    if type(obj) is cls
+                    or obj.__class__.__name__ == cls]
+            return len(objs)
         return len(FileStorage.__objects.values())
 
     def get(self, cls, id):
