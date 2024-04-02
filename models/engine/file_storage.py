@@ -76,9 +76,9 @@ class FileStorage:
         """
         if cls:
             return len(
-                    [obj for FileStorage.__objects.values()
-                        if type(obj) is cls
-                        or obj.__class__.__name__ == cls])
+                    filter(
+                        lambda obj: type(obj) is cls or obj.__class__.__name__ == cls,
+                        FileStorage.__objects.values()))
         return len(FileStorage.__objects.values())
 
     def get(self, cls, id):
