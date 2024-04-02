@@ -2,21 +2,24 @@
 """ holds class Place"""
 import models
 from models.base_model import BaseModel, Base
-from os import getenv
-import sqlalchemy
 from sqlalchemy import Column, String, Integer, Float, ForeignKey, Table
 from sqlalchemy.orm import relationship
 
 if models.storage_t == 'db':
-    place_amenity = Table('place_amenity', Base.metadata,
-                          Column('place_id', String(60),
-                                 ForeignKey('places.id', onupdate='CASCADE',
-                                            ondelete='CASCADE'),
-                                 primary_key=True),
-                          Column('amenity_id', String(60),
-                                 ForeignKey('amenities.id', onupdate='CASCADE',
-                                            ondelete='CASCADE'),
-                                 primary_key=True))
+    place_amenity = Table(
+        'place_amenity',
+        Base.metadata,
+        Column(
+            'place_id',
+            ForeignKey('places.id'),
+            primary_key=True,
+            nullable=False),
+        Column(
+            'amenity_id',
+            ForeignKey('amenities.id'),
+            primary_key=True,
+            nullable=False)
+        )
 
 
 class Place(BaseModel, Base):
@@ -34,9 +37,11 @@ class Place(BaseModel, Base):
         latitude = Column(Float, nullable=True)
         longitude = Column(Float, nullable=True)
         reviews = relationship("Review", backref="place")
-        amenities = relationship("Amenity", secondary="place_amenity",
-                                 backref="place_amenities",
-                                 viewonly=False)
+        amenities = relationship(
+                "Amenity",
+                secondary=place_amenity,
+                back_populates='place_amenities',
+                viewonly=False)
 
         @property
         def amenity_ids(self):
@@ -45,7 +50,9 @@ class Place(BaseModel, Base):
 
         def remove_amenity(self, amenity):
             """remove amenity"""
-            first_or_default = next((a for a in self.amenities if a.id == amenity.id), None)
+            first_or_default = next(
+                    (a for a in self.amenities if a.id == amenity.id),
+                    None)
             if first_or_default:
                 self.amenities.remove(first_or_default)
                 return True
@@ -87,7 +94,7 @@ class Place(BaseModel, Base):
             amenities = set(
                     [
                         models.storage.get(Amenity, amenity_id)
-                        for amenity_id in amenity_ids])
+                        for amenity_id in self.amenity_ids])
             amenities.reduce(None)
             return list(amenities)
 
@@ -101,10 +108,19 @@ class Place(BaseModel, Base):
 
         def add_amenity(self, amenity):
             if amenity.id not in self.amenity_ids:
-                self.amenity_ids.append(amenity_id)
+                self.amenity_ids.append(amenity.id)
                 return True
             return False
 
     def __init__(self, *args, **kwargs):
         """initializes Place"""
         super().__init__(*args, **kwargs)
+
+    def to_dict(self, add_password=False):
+        """Override the BaseModel to_dict"""
+        dictionary = super().to_dict(add_password)
+        if 'amenities' in dictionary:
+            del dictionary['amenities']
+        if 'reviews' in dictionary:
+            del dictionary['reviews']
+        return dictionary

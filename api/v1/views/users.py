@@ -4,7 +4,6 @@ module - users
 """
 from api.v1.views import app_views
 from flask import jsonify, request, abort
-from werkzeug.exceptions import BadRequest
 from models import storage
 from models.user import User
 
@@ -20,11 +19,8 @@ def show_users(user_id=None):
     Retrieves a User object: GET /api/v1/users/<user_id>
     """
     if user_id is None:
-        return jsonify(
-                list(
-                    map(
-                        lambda user: user.to_dict(),
-                        storage.all(User).values()))), 200
+        result = [user.to_dict() for user in storage.all(User).values()]
+        return jsonify(result), 200
     user = storage.get(User, user_id)
     if user is not None:
         return jsonify(user.to_dict()), 200
@@ -43,7 +39,7 @@ def delete_user(user_id):
     if user is not None:
         storage.delete(user)
         storage.save()
-        return jsonify(user.to_dict()), 200
+        return jsonify({}), 200
     abort(404)
 
 
@@ -55,18 +51,17 @@ def create_user():
     """
     Creates a User: POST /api/v1/users
     """
-    try:
-        json_data = request.get_json()
-        if 'email' not in json_data:
-            return jsonify({'error': 'Missing email'}), 400
-        if 'password' not in json_data:
-            return jsonify({'error': 'Missing password'}), 400
-        user = User(**json_data)
-        storage.new(user)
-        storage.save()
-        return jsonify(user.to_dict()), 201
-    except BadRequest:
-        return jsonify({'error': 'Not a JSON'}), 400
+    json_data = request.get_json(silent=True)
+    if json_data is None:
+        abort(400, 'Not a JSON')
+    if 'email' not in json_data:
+        abort(400, 'Missing email')
+    if 'password' not in json_data:
+        abort(400, 'Missing password')
+    user = User(**json_data)
+    storage.new(user)
+    storage.save()
+    return jsonify(user.to_dict()), 201
 
 
 @app_views.route(
@@ -78,14 +73,14 @@ def update_user(user_id):
     Updates a User object: PUT /api/v1/users/<user_id>
     """
     user = storage.get(User, user_id)
+    ignore_keyes = ('id', 'email', 'created_at', 'updated_at')
     if user is not None:
-        try:
-            json_data = request.get_json()
-            for key, value in json_data.items():
-                if key not in ('id', 'email', 'created_at', 'updated_at'):
-                    setattr(user, key, value)
-            storage.save()
-            return jsonify(user.to_dict()), 200
-        except BadRequest:
-            return jsonify({'error': 'Not a JSON'}), 400
+        json_data = request.get_json(silent=True)
+        if json_data is None:
+            abort(400, 'Not a JSON')
+        for key, value in json_data.items():
+            if key not in ignore_keyes:
+                setattr(user, key, value)
+        storage.save()
+        return jsonify(user.to_dict()), 200
     abort(404)

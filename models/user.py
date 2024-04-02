@@ -15,7 +15,7 @@ class User(BaseModel, Base):
     if models.storage_t == 'db':
         __tablename__ = 'users'
         email = Column(String(128), nullable=False)
-        __password = Column(String(128), nullable=False)
+        __password = Column('password', String(128), nullable=False)
         first_name = Column(String(128), nullable=True)
         last_name = Column(String(128), nullable=True)
         places = relationship("Place", backref="user")
@@ -50,3 +50,10 @@ class User(BaseModel, Base):
             kwargs.pop('password')
         super().__init__(*args, **kwargs)
         self.password = pwd
+
+    def to_dict(self, add_password=False):
+        """overriding to_dict method"""
+        return {
+            key: value
+            for key, value in super().to_dict(add_password).items()
+            if key not in ('places', 'reviews')}
