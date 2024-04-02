@@ -75,13 +75,10 @@ class FileStorage:
         If no class is passed, returns the count of all objects in storage.
         """
         if cls:
-            for key in classes:
-                if key is cls or key is classes[cls]:
-                    return len(
-                        filter(
-                            lambda obj: obj.__class__ is classes[key],
-                            FileStorage.__objects.values()))
-            return 0
+            return len(
+                    filter(
+                        lambda obj: type(obj) is cls or obj.__class__.__name__ == cls,
+                        FileStorage.__objects.values()))
         return len(FileStorage.__objects.values())
 
     def get(self, cls, id):
