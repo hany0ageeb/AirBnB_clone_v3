@@ -131,14 +131,14 @@ def search_places():
                 [
                     city.id
                     for city in storage.all(City).values()
-                    if city.state_id in states_ids
-                    or city.id in cities_ids])
+                    if city.state_id in states_ids or
+                    city.id in cities_ids])
     if cities_ids:
         places = [
                 place
                 for place in storage.all(Place).values()
-                if place.city_id in cities_ids
-                and amenities_ids.issubset(set(place.amenity_ids))]
+                if place.city_id in cities_ids and
+                amenities_ids.issubset(set(place.amenity_ids))]
     else:
         places = [
                 place
