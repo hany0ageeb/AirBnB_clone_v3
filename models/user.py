@@ -45,11 +45,7 @@ class User(BaseModel, Base):
 
     def __init__(self, *args, **kwargs):
         """initializes user"""
-        if kwargs:
-            pwd = kwargs.get('password', None)
-            kwargs.pop('password')
         super().__init__(*args, **kwargs)
-        self.password = pwd
 
     def to_dict(self, add_password=False):
         """overriding to_dict method"""

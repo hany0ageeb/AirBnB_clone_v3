@@ -77,7 +77,8 @@ class FileStorage:
         if cls:
             return len(
                     filter(
-                        lambda obj: type(obj) is cls or obj.__class__.__name__ == cls,
+                        lambda obj: type(obj) is cls
+                        or obj.__class__.__name__ == cls,
                         FileStorage.__objects.values()))
         return len(FileStorage.__objects.values())
 
