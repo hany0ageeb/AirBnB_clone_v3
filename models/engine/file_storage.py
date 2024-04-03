@@ -74,13 +74,16 @@ class FileStorage:
         Returns the number of objects in storage matching the given class.
         If no class is passed, returns the count of all objects in storage.
         """
+        def filter_objs(objs, cls):
+            """filter objects based on the given class"""
+            filtered = []
+            for obj in objs:
+                if type(obj) is cls or obj.__class__.__name__ == cls:
+                    filtered.append(obj)
+            return filtered
+
         if cls:
-            objs = [
-                    obj
-                    for obj in FileStorage.__objects.values()
-                    if type(obj) is cls
-                    or obj.__class__.__name__ == cls]
-            return len(objs)
+            return len(filter_objs(FileStorage.__objects.value(), cls))
         return len(FileStorage.__objects.values())
 
     def get(self, cls, id):
