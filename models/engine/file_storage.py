@@ -83,7 +83,7 @@ class FileStorage:
             return filtered
 
         if cls:
-            return len(filter_objs(FileStorage.__objects.value(), cls))
+            return len(filter_objs(FileStorage.__objects.values(), cls))
         return len(FileStorage.__objects.values())
 
     def get(self, cls, id):
