@@ -129,7 +129,7 @@ def search_places():
     if states_ids:
         states_cities = [
                 city.id
-                for city in storage.all(State).values()
+                for city in storage.all(City).values()
                 if city.state_id in states_ids]
         cities_ids.update(states_cities)
     if cities_ids:
